@@ -1,0 +1,6 @@
+{
+  "name": "SYNAPSE COACH",
+  "description": "Application de suivi pédagogique SYNAPSE COACH : gestion des élèves, des séances, des notions étudiées/assimilées et générateur d'évaluations IA.",
+  "requestFramePermissions": [],
+  "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
+}
