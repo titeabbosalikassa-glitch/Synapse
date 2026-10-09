@@ -255,7 +255,7 @@ export const LoginCredentialsModal: React.FC<LoginCredentialsModalProps> = ({
                   ? 'Code personnalisé actif'
                   : 'Par défaut : mot de passe Direction'}
               </span>
-              <span className="text-slate-400 font-mono text-[10px]">HPG Vault Security</span>
+              <span className="text-slate-400 font-mono text-[10px]">Secure Vault</span>
             </div>
           </div>
         ) : (

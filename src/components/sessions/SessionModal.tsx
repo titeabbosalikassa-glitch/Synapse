@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
-import { Session, Student, SessionRating } from '../../types';
-import { SUBJECTS, REFERENCE_CURRICULUM } from '../../data/mockData';
+import { Session, Student, SessionRating, ClassLevel } from '../../types';
+import { SUBJECTS, REFERENCE_CURRICULUM, CLASS_MATH_CURRICULUM } from '../../data/mockData';
 import { X, Calendar, Award, CheckCircle } from 'lucide-react';
 
 interface SessionModalProps {
@@ -28,12 +28,13 @@ export const SessionModal: React.FC<SessionModalProps> = ({
   const [subjectId, setSubjectId] = useState('maths');
   const [chapter, setChapter] = useState('');
   const [notion, setNotion] = useState('');
+  const [selectedChapterFilter, setSelectedChapterFilter] = useState<string | null>(null);
   const [objective, setObjective] = useState('');
   const [contentWorked, setContentWorked] = useState('');
   const [appreciation, setAppreciation] = useState('');
   const [notionStatusUpdate, setNotionStatusUpdate] = useState<'studied' | 'assimilated' | 'to_reinforce'>('assimilated');
 
-  // 5 criteria of HPG continuous rating
+  // 5 criteria of continuous rating
   const [understanding, setUnderstanding] = useState(16);
   const [autonomy, setAutonomy] = useState(15);
   const [methodology, setMethodology] = useState(16);
@@ -81,7 +82,13 @@ export const SessionModal: React.FC<SessionModalProps> = ({
 
   // Pre-load reference chapters if matching
   const activeSubjectName = SUBJECTS.find((s) => s.id === subjectId)?.name || 'Mathématiques';
-  const referenceCurriculum = REFERENCE_CURRICULUM[activeSubjectName] || [];
+  const selectedStudent = students.find((s) => s.id === studentId);
+  const studentClassLevel = selectedStudent?.classLevel || 'Terminale C';
+
+  const classCurriculum =
+    activeSubjectName === 'Mathématiques' && CLASS_MATH_CURRICULUM[studentClassLevel as ClassLevel]
+      ? CLASS_MATH_CURRICULUM[studentClassLevel as ClassLevel]
+      : REFERENCE_CURRICULUM[activeSubjectName] || [];
 
   const handleSelectReferenceNotion = (chap: string, not: string) => {
     setChapter(chap);
@@ -133,7 +140,7 @@ export const SessionModal: React.FC<SessionModalProps> = ({
             </div>
             <div>
               <h2 className="text-sm font-bold text-slate-900">
-                {editingSession ? 'Modifier la séance' : 'Enregistrer une nouvelle séance HPG'}
+                {editingSession ? 'Modifier la séance' : 'Enregistrer une nouvelle séance'}
               </h2>
               <p className="text-[11px] text-slate-500">
                 Cotation continue sur 5 critères (score /100) et suivi des notions
@@ -247,25 +254,85 @@ export const SessionModal: React.FC<SessionModalProps> = ({
             </div>
           </div>
 
-          {/* Suggestions du programme officiel */}
-          {referenceCurriculum.length > 0 && (
-            <div className="p-3 rounded-xl bg-slate-50 border border-slate-200/60">
-              <span className="text-[11px] font-semibold text-slate-600 block mb-1.5">
-                Suggestions du programme officiel ({activeSubjectName}) :
-              </span>
-              <div className="flex flex-wrap gap-1.5">
-                {referenceCurriculum.flatMap((c) =>
-                  c.notions.map((n) => (
-                    <button
-                      type="button"
-                      key={n}
-                      onClick={() => handleSelectReferenceNotion(c.chapter, n)}
-                      className="px-2 py-0.5 rounded text-[10px] font-medium bg-white border border-slate-200 text-slate-700 hover:bg-indigo-50 hover:border-indigo-300 hover:text-indigo-800 transition-colors"
-                    >
-                      {n}
-                    </button>
-                  ))
+          {/* Programme officiel interactif adapté à la classe ({studentClassLevel}) */}
+          {classCurriculum.length > 0 && (
+            <div className="p-4 rounded-xl bg-slate-50 border border-slate-200/80 space-y-3">
+              <div className="flex items-center justify-between">
+                <span className="text-xs font-bold uppercase tracking-wider text-slate-700">
+                  Programme officiel & Suggestions ({activeSubjectName} — {studentClassLevel})
+                </span>
+                {selectedChapterFilter && (
+                  <button
+                    type="button"
+                    onClick={() => setSelectedChapterFilter(null)}
+                    className="text-[11px] text-indigo-600 hover:underline font-semibold"
+                  >
+                    Voir tous les chapitres
+                  </button>
                 )}
+              </div>
+
+              {/* 1. Liste des chapitres de la classe */}
+              <div>
+                <span className="text-[11px] font-semibold text-slate-500 block mb-1">
+                  1. Choisir le chapitre du cours :
+                </span>
+                <div className="flex flex-wrap gap-1.5 max-h-28 overflow-y-auto">
+                  {classCurriculum.map((c) => {
+                    const isSelectedChap = chapter === c.chapter || selectedChapterFilter === c.chapter;
+                    return (
+                      <button
+                        type="button"
+                        key={c.chapter}
+                        onClick={() => {
+                          setChapter(c.chapter);
+                          setSelectedChapterFilter(c.chapter);
+                        }}
+                        className={`px-3 py-1.5 rounded-xl text-xs font-medium transition-all ${
+                          isSelectedChap
+                            ? 'bg-indigo-600 text-white shadow-xs font-bold'
+                            : 'bg-white border border-slate-200 text-slate-700 hover:bg-slate-100'
+                        }`}
+                      >
+                        📚 {c.chapter}
+                      </button>
+                    );
+                  })}
+                </div>
+              </div>
+
+              {/* 2. Notions abordées pour le chapitre sélectionné */}
+              <div>
+                <span className="text-[11px] font-semibold text-slate-500 block mb-1">
+                  2. Choisir la notion abordée :
+                </span>
+                <div className="flex flex-wrap gap-1.5 max-h-36 overflow-y-auto">
+                  {(selectedChapterFilter
+                    ? classCurriculum.filter((c) => c.chapter === selectedChapterFilter)
+                    : classCurriculum
+                  ).flatMap((c) =>
+                    c.notions.map((n) => {
+                      const isSelectedNotion = notion === n;
+                      return (
+                        <button
+                          type="button"
+                          key={n}
+                          onClick={() => {
+                            setChapter(c.chapter);
+                            setNotion(n);
+                          }}
+                          className={`px-2.5 py-1 rounded-lg text-[11px] font-medium transition-all ${
+                            isSelectedNotion
+                              ? 'bg-emerald-600 text-white shadow-xs font-bold'
+                              : 'bg-white border border-slate-200 text-slate-700 hover:bg-emerald-50 hover:border-emerald-300'
+                          }`}
+                        >
+                          {isSelectedNotion ? '✓ ' : '+ '} {n}
+                        </button>
+                      );
+                    })
+                  )}
+                </div>
               </div>
             </div>
           )}
@@ -297,13 +364,13 @@ export const SessionModal: React.FC<SessionModalProps> = ({
             />
           </div>
 
-          {/* COTATION PÉDAGOGIQUE HPG (5 Critères /20) */}
+          {/* COTATION PÉDAGOGIQUE (5 Critères /20) */}
           <div className="p-4 rounded-xl bg-indigo-50/50 border border-indigo-100 space-y-3">
             <div className="flex items-center justify-between">
               <div className="flex items-center gap-2">
                 <Award className="w-4 h-4 text-indigo-700" />
                 <h3 className="text-xs font-bold text-indigo-950">
-                  Grille de Cotation Continue HPG (Total /100)
+                  Grille de Cotation Continue (Total /100)
                 </h3>
               </div>
               <div className="px-3 py-1 bg-indigo-600 text-white font-mono font-bold text-xs rounded-lg shadow-2xs">

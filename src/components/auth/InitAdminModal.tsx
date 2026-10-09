@@ -28,8 +28,8 @@ export const InitAdminModal: React.FC<InitAdminModalProps> = ({
 }) => {
   const { adminUser, initAdminAccount } = useAuth();
 
-  const [name, setName] = useState(adminUser.name || 'Directeur HPG');
-  const [email, setEmail] = useState(adminUser.email || 'direction@hpg-education.com');
+  const [name, setName] = useState(adminUser.name || 'Admin principale');
+  const [email, setEmail] = useState(adminUser.email || 'titeabbosalikassa@gmail.com');
   const [phone, setPhone] = useState(adminUser.phone || '');
   const [password, setPassword] = useState('');
   const [confirmPassword, setConfirmPassword] = useState('');
@@ -99,10 +99,10 @@ export const InitAdminModal: React.FC<InitAdminModalProps> = ({
           </div>
           <div>
             <h2 className="text-base font-extrabold text-slate-900">
-              Configuration de la Direction
+              Configuration de l'Administrateur
             </h2>
             <p className="text-xs text-slate-500">
-              Définissez l'identité et le mot de passe de la Direction HPG
+              Définissez l'identité et le mot de passe de l'administrateur principal
             </p>
           </div>
         </div>
@@ -113,7 +113,7 @@ export const InitAdminModal: React.FC<InitAdminModalProps> = ({
               <CheckCircle2 className="w-8 h-8" />
             </div>
             <h3 className="text-sm font-bold text-slate-900">
-              Compte Direction configuré avec succès !
+              Compte administrateur configuré avec succès !
             </h3>
             <p className="text-xs text-slate-500">
               Vous êtes désormais connecté avec vos nouveaux identifiants.
@@ -141,7 +141,7 @@ export const InitAdminModal: React.FC<InitAdminModalProps> = ({
                   required
                   value={name}
                   onChange={(e) => setName(e.target.value)}
-                  placeholder="Ex : M. Salikassa (Direction HPG)"
+                  placeholder="Ex : Tite Abbosa Kassa"
                   className="w-full pl-9 pr-3 py-2 bg-slate-50 border border-slate-200 rounded-xl text-xs font-semibold focus:outline-none focus:ring-2 focus:ring-slate-500/20 focus:border-slate-800 focus:bg-white"
                 />
               </div>
@@ -160,7 +160,7 @@ export const InitAdminModal: React.FC<InitAdminModalProps> = ({
                   required
                   value={email}
                   onChange={(e) => setEmail(e.target.value)}
-                  placeholder="direction@hpg-education.com"
+                  placeholder="direction@synapse-coach.com"
                   className="w-full pl-9 pr-3 py-2 bg-slate-50 border border-slate-200 rounded-xl text-xs font-semibold focus:outline-none focus:ring-2 focus:ring-slate-500/20 focus:border-slate-800 focus:bg-white"
                 />
               </div>

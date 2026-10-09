@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { Session, Student, User } from '../../types';
-import { Activity, Search, Calendar, UserCheck, BookOpen, Filter, ArrowUpDown } from 'lucide-react';
+import { Activity, Search, Calendar, UserCheck, BookOpen, Filter, ArrowUpDown, Trash2 } from 'lucide-react';
 
 interface ActivityLogTableProps {
   sessions: Session[];
@@ -17,6 +17,7 @@ export const ActivityLogTable: React.FC<ActivityLogTableProps> = ({
 }) => {
   const [filterType, setFilterType] = useState<'all' | 'sessions' | 'students' | 'teachers'>('all');
   const [searchTerm, setSearchTerm] = useState('');
+  const [clearedIds, setClearedIds] = useState<string[]>([]);
 
   // Build unified activities array from sessions, students, teachers
   const activities = [
@@ -44,12 +45,19 @@ export const ActivityLogTable: React.FC<ActivityLogTableProps> = ({
       title: `Enseignant Actif : ${t.name}`,
       description: `Matières: ${t.subject} | Email: ${t.email}`,
       date: new Date().toISOString(),
-      author: 'Direction HPG',
+      author: 'Direction',
       badgeColor: 'bg-amber-50 text-amber-700 border-amber-200',
     })),
   ].sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime());
 
+  const handleClearLog = () => {
+    if (window.confirm("Êtes-vous sûr de vouloir vider le journal des activités ?")) {
+      setClearedIds(activities.map((a) => a.id));
+    }
+  };
+
   const filteredActivities = activities.filter((act) => {
+    if (clearedIds.includes(act.id)) return false;
     const matchesType = filterType === 'all' || act.type === filterType;
     const matchesSearch =
       act.title.toLowerCase().includes(searchTerm.toLowerCase()) ||
@@ -71,7 +79,7 @@ export const ActivityLogTable: React.FC<ActivityLogTableProps> = ({
           </p>
         </div>
 
-        <div className="flex items-center gap-3">
+        <div className="flex flex-wrap items-center gap-3">
           <div className="relative">
             <Search className="w-4 h-4 text-slate-400 absolute left-3 top-1/2 -translate-y-1/2" />
             <input
@@ -82,6 +90,15 @@ export const ActivityLogTable: React.FC<ActivityLogTableProps> = ({
               className="pl-9 pr-4 py-2 text-xs rounded-xl border border-slate-200 bg-slate-50 focus:bg-white focus:outline-none focus:ring-2 focus:ring-indigo-500/20 w-60"
             />
           </div>
+          {activities.length > 0 && (
+            <button
+              type="button"
+              onClick={handleClearLog}
+              className="px-3.5 py-2 rounded-xl text-xs font-bold text-rose-600 bg-rose-50 hover:bg-rose-100 border border-rose-200 transition-colors flex items-center gap-1.5 cursor-pointer"
+            >
+              <Trash2 className="w-4 h-4" /> Vider le journal
+            </button>
+          )}
         </div>
       </div>
 

@@ -22,7 +22,6 @@ import {
   TrendingUp,
   FileText,
   Plus,
-  ArrowRight,
   Filter,
   Layers,
   GraduationCap,
@@ -106,7 +105,7 @@ export const SimpleDashboard: React.FC<SimpleDashboardProps> = ({
           <div>
             <div className="flex items-center gap-2">
               <h1 className="text-xl sm:text-2xl font-black text-slate-900 tracking-tight">
-                {isAdmin ? 'Supervision Globale HPG' : `Bonjour, ${currentUser.name}`}
+                {isAdmin ? 'Supervision Globale' : `Bonjour, ${currentUser.name}`}
               </h1>
               <span
                 className={`text-[11px] font-bold px-2 py-0.5 rounded-full ${
@@ -115,12 +114,12 @@ export const SimpleDashboard: React.FC<SimpleDashboardProps> = ({
                     : 'bg-indigo-100 text-indigo-700 border border-indigo-200/60'
                 }`}
               >
-                {isAdmin ? 'Direction HPG' : currentUser.subject}
+                {isAdmin ? 'Direction' : currentUser.subject}
               </span>
             </div>
             <p className="text-xs text-slate-500 mt-1">
               {isAdmin
-                ? 'Suivi consolidé des 11 enseignants, des élèves et du cycle de cotation HPG.'
+                ? 'Suivi consolidé des enseignants, des élèves et du cycle de cotation.'
                 : 'Suivi pédagogique continu, enregistrement des séances et validation des notions.'}
             </p>
           </div>
@@ -131,12 +130,14 @@ export const SimpleDashboard: React.FC<SimpleDashboardProps> = ({
               <>
                 <button
                   onClick={onOpenNewSession}
+                  title="Raccourci: Ctrl + Shift + S"
                   className="inline-flex items-center gap-1.5 px-3.5 py-2 rounded-xl text-xs font-semibold bg-indigo-600 hover:bg-indigo-700 text-white shadow-xs transition-colors"
                 >
                   <Plus className="w-4 h-4" /> + Nouvelle séance
                 </button>
                 <button
                   onClick={onOpenNewStudent}
+                  title="Raccourci: Ctrl + N"
                   className="inline-flex items-center gap-1.5 px-3.5 py-2 rounded-xl text-xs font-semibold bg-slate-100 hover:bg-slate-200 text-slate-700 transition-colors"
                 >
                   <Users className="w-4 h-4" /> + Nouvel élève
@@ -160,12 +161,73 @@ export const SimpleDashboard: React.FC<SimpleDashboardProps> = ({
         </div>
       </div>
 
+      {/* Inactivity Reminder Banner (> 5 days without session) */}
+      {(() => {
+        const now = new Date().getTime();
+        const FIVE_DAYS_MS = 5 * 24 * 60 * 60 * 1000;
+        const inactiveStudents = students.filter((student) => {
+          if (!isAdmin && student.teacherId !== currentUser.id) return false;
+          const studentSessions = sessions.filter((s) => s.studentId === student.id);
+          if (studentSessions.length === 0) {
+            const createdTime = new Date(student.createdAt || Date.now()).getTime();
+            return now - createdTime > FIVE_DAYS_MS;
+          }
+          const latestSessionTime = Math.max(...studentSessions.map((s) => new Date(s.date).getTime()));
+          return now - latestSessionTime > FIVE_DAYS_MS;
+        });
+
+        if (inactiveStudents.length === 0) return null;
+
+        return (
+          <div className="bg-amber-50 border border-amber-200/80 rounded-2xl p-4 sm:p-5 shadow-2xs flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
+            <div className="flex items-start gap-3">
+              <div className="p-2.5 rounded-xl bg-amber-100 text-amber-800 border border-amber-200 shrink-0">
+                <Clock className="w-5 h-5" />
+              </div>
+              <div>
+                <h2 className="text-sm font-bold text-amber-900">
+                  Rappel Pédagogique : {inactiveStudents.length} élève{inactiveStudents.length > 1 ? 's' : ''} sans séance depuis plus de 5 jours
+                </h2>
+                <p className="text-xs text-amber-700 mt-0.5">
+                  Veuillez planifier une séance de suivi pour assurer la régularité du parcours pédagogique.
+                </p>
+                <div className="flex flex-wrap gap-2 mt-2">
+                  {inactiveStudents.slice(0, 5).map((st) => (
+                    <button
+                      key={st.id}
+                      onClick={() => onSelectStudent(st)}
+                      className="inline-flex items-center gap-1 px-2.5 py-1 rounded-lg bg-white border border-amber-300 text-amber-900 text-xs font-semibold hover:bg-amber-100 transition-colors shadow-2xs"
+                    >
+                      <span>{st.firstName} {st.lastName}</span>
+                      <span className="text-[10px] text-amber-600">({st.classLevel})</span>
+                    </button>
+                  ))}
+                  {inactiveStudents.length > 5 && (
+                    <span className="text-xs text-amber-700 font-semibold self-center">
+                      +{inactiveStudents.length - 5} autres...
+                    </span>
+                  )}
+                </div>
+              </div>
+            </div>
+            {!isAdmin && (
+              <button
+                onClick={onOpenNewSession}
+                className="self-stretch sm:self-auto px-4 py-2 bg-amber-600 hover:bg-amber-700 text-white rounded-xl text-xs font-bold transition-colors shadow-2xs shrink-0 flex items-center justify-center gap-1.5"
+              >
+                <Plus className="w-4 h-4" /> Planifier une séance
+              </button>
+            )}
+          </div>
+        );
+      })()}
+
       {/* Primary KPI Cards */}
       <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
         <div className="bg-white p-4 rounded-2xl border border-slate-200/80 shadow-2xs">
           <div className="flex items-center justify-between">
             <span className="text-xs font-semibold text-slate-500">
-              {isAdmin ? 'Élèves HPG' : 'Mes Élèves'}
+              {isAdmin ? 'Élèves' : 'Mes Élèves'}
             </span>
             <div className="w-8 h-8 rounded-xl bg-indigo-50 text-indigo-600 flex items-center justify-center">
               <Users className="w-4 h-4" />
@@ -287,7 +349,7 @@ export const SimpleDashboard: React.FC<SimpleDashboardProps> = ({
           <div className="flex items-center justify-between">
             <div className="flex items-center gap-2">
               <Filter className="w-4 h-4 text-slate-500" />
-              <h2 className="text-sm font-bold text-slate-900">Filtres de Supervision HPG</h2>
+              <h2 className="text-sm font-bold text-slate-900">Filtres de Supervision</h2>
             </div>
             <span className="text-xs text-slate-500 font-mono">
               {adminFilteredStudents.length} élève(s) correspondant(s)
@@ -364,7 +426,6 @@ export const SimpleDashboard: React.FC<SimpleDashboardProps> = ({
               className="text-xs font-semibold text-indigo-600 hover:text-indigo-700 flex items-center gap-1"
             >
               <span>Voir tous ({students.length})</span>
-              <ArrowRight className="w-3.5 h-3.5" />
             </button>
           </div>
 

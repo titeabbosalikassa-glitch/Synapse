@@ -239,7 +239,7 @@ export const LoginScreen: React.FC = () => {
           {/* ===================== LOGIN FORM ===================== */}
           {authMode === 'login' ? (
             <>
-              <form onSubmit={handleSubmit} className="space-y-4">
+              <form onSubmit={handleSubmit} method="post" action="" className="space-y-4">
                 <div>
                   <label
                     htmlFor="login-email"
@@ -253,12 +253,13 @@ export const LoginScreen: React.FC = () => {
                     </div>
                     <input
                       id="login-email"
+                      name="email"
                       type="email"
                       required
                       value={email}
                       onChange={(e) => setEmail(e.target.value)}
-                      placeholder="nom@hpg-education.com"
-                      autoComplete="username"
+                      placeholder="nom@synapse-coach.com"
+                      autoComplete="username email"
                       className="w-full h-11 pl-10 pr-3.5 bg-white border-2 border-slate-300 hover:border-slate-400 focus:border-indigo-600 focus:bg-white focus:ring-4 focus:ring-indigo-500/15 rounded-xl text-sm font-semibold transition-all text-slate-900 placeholder:text-slate-400 shadow-2xs"
                     />
                   </div>
@@ -279,6 +280,7 @@ export const LoginScreen: React.FC = () => {
                     </div>
                     <input
                       id="login-password"
+                      name="password"
                       type={showPassword ? 'text' : 'password'}
                       required
                       value={password}
@@ -407,8 +409,10 @@ export const LoginScreen: React.FC = () => {
                         </div>
                         <input
                           id="reg-name"
+                          name="name"
                           type="text"
                           required
+                          autoComplete="name"
                           value={regName}
                           onChange={(e) => setRegName(e.target.value)}
                           placeholder="Dr. Sarah Mensah ou M. Traoré"
@@ -458,11 +462,13 @@ export const LoginScreen: React.FC = () => {
                         </div>
                         <input
                           id="reg-email"
+                          name="email"
                           type="email"
                           required
+                          autoComplete="email"
                           value={regEmail}
                           onChange={(e) => setRegEmail(e.target.value)}
-                          placeholder="prenom.nom@hpg-education.com"
+                          placeholder="prenom.nom@synapse-coach.com"
                           className="w-full h-10 pl-10 pr-3.5 bg-white border border-slate-300 focus:border-indigo-600 focus:ring-4 focus:ring-indigo-500/15 rounded-xl text-xs font-semibold text-slate-900 placeholder:text-slate-400"
                         />
                       </div>
@@ -482,7 +488,9 @@ export const LoginScreen: React.FC = () => {
                         </div>
                         <input
                           id="reg-phone"
+                          name="tel"
                           type="tel"
+                          autoComplete="tel"
                           value={regPhone}
                           onChange={(e) => setRegPhone(e.target.value)}
                           placeholder="+221 77 000 00 00"
@@ -506,8 +514,10 @@ export const LoginScreen: React.FC = () => {
                           </div>
                           <input
                             id="reg-password"
+                            name="password"
                             type={showRegPassword ? 'text' : 'password'}
                             required
+                            autoComplete="new-password"
                             value={regPassword}
                             onChange={(e) => setRegPassword(e.target.value)}
                             placeholder="min. 4 car."
@@ -539,8 +549,10 @@ export const LoginScreen: React.FC = () => {
                           </div>
                           <input
                             id="reg-confirm-password"
+                            name="confirm-password"
                             type={showRegPassword ? 'text' : 'password'}
                             required
+                            autoComplete="new-password"
                             value={regConfirmPassword}
                             onChange={(e) => setRegConfirmPassword(e.target.value)}
                             placeholder="••••••••"
@@ -588,7 +600,7 @@ export const LoginScreen: React.FC = () => {
 
         {/* Footer info with discreet access */}
         <div className="mt-6 text-center text-xs text-slate-400 flex items-center justify-center gap-1.5">
-          <span>HPG • Structure d'Excellence Pédagogique (Sciences & Langues)</span>
+          <span>Synapse Coach • Excellence Pédagogique</span>
           <button
             type="button"
             onClick={() => setShowAdminSecret((prev) => !prev)}

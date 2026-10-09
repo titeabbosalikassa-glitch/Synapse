@@ -48,6 +48,12 @@ interface AuthContextType {
     newPassword: string,
     currentPassword?: string
   ) => { success: boolean; error?: string };
+  updateProfile: (
+    userId: string,
+    data: { name: string; phone?: string }
+  ) => { success: boolean; error?: string };
+  promoteToAdmin: (teacherId: string) => boolean;
+  revokeAdmin: (adminId: string) => boolean;
   isCustomAdmin: boolean;
 }
 
@@ -68,7 +74,8 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
                 ...a,
                 email: 'titeabbosalikassa@gmail.com',
                 password: 'Clarisse&Jedidja',
-                name: 'Tite Abbosa Kassa (Directrice Pédagogique)',
+                name: 'Tite Abbosa Kassa',
+                phone: a.phone || '065451963',
               };
             }
             return a;
@@ -130,13 +137,24 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
 
   const allUsers: User[] = [...admins, ...teachers];
 
-  // Active user session state - always starts on login screen upon startup/refresh
-  const [currentUser, setCurrentUser] = useState<User | null>(null);
+  // Active user session state - persists across page refresh
+  const [currentUser, setCurrentUser] = useState<User | null>(() => {
+    const savedId = localStorage.getItem('synapse_hpg_active_user_id');
+    if (savedId) {
+      const all = [...admins, ...teachers];
+      const found = all.find((u) => u.id === savedId);
+      if (found) return found;
+    }
+    return null;
+  });
 
   useEffect(() => {
-    // Clear any previous stored active session key to guarantee startup on login screen
-    localStorage.removeItem('synapse_hpg_active_user_id');
-  }, []);
+    if (currentUser) {
+      localStorage.setItem('synapse_hpg_active_user_id', currentUser.id);
+    } else {
+      localStorage.removeItem('synapse_hpg_active_user_id');
+    }
+  }, [currentUser]);
 
   const isCustomAdmin = Boolean(localStorage.getItem('synapse_hpg_admin_is_customized'));
 
@@ -391,7 +409,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   }): User => {
     const updatedAdmin: User = {
       id: 'admin-1',
-      name: data.name.trim() || 'Directeur Pédagogique HPG',
+      name: data.name.trim() || 'Admin principale',
       email: data.email.trim().toLowerCase(),
       role: 'admin',
       phone: data.phone?.trim() || undefined,
@@ -512,6 +530,86 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     }
   };
 
+  const promoteToAdmin = (teacherId: string): boolean => {
+    const t = teachers.find((item) => item.id === teacherId);
+    if (!t) return false;
+    const promoted: User = { ...t, role: 'admin' };
+    const newTeachers = teachers.filter((item) => item.id !== teacherId);
+    const newAdmins = [...admins, promoted];
+    setTeachers(newTeachers);
+    setAdmins(newAdmins);
+    localStorage.setItem('synapse_hpg_teachers', JSON.stringify(newTeachers));
+    localStorage.setItem('synapse_hpg_admins', JSON.stringify(newAdmins));
+    return true;
+  };
+
+  const revokeAdmin = (adminId: string): boolean => {
+    if (adminId === 'admin-1') return false; // Cannot revoke primary admin
+    const a = admins.find((item) => item.id === adminId);
+    if (!a) return false;
+    const demoted: User = { ...a, role: 'teacher', subject: a.subject || 'Mathématiques' };
+    const newAdmins = admins.filter((item) => item.id !== adminId);
+    const newTeachers = [...teachers, demoted];
+    setAdmins(newAdmins);
+    setTeachers(newTeachers);
+    localStorage.setItem('synapse_hpg_admins', JSON.stringify(newAdmins));
+    localStorage.setItem('synapse_hpg_teachers', JSON.stringify(newTeachers));
+    if (currentUser?.id === adminId) {
+      setCurrentUser(demoted);
+    }
+    return true;
+  };
+
+  const updateProfile = (
+    userId: string,
+    data: { name: string; phone?: string }
+  ): { success: boolean; error?: string } => {
+    const trimmedName = data.name.trim();
+    if (!trimmedName) {
+      return { success: false, error: 'Le nom complet ne peut pas être vide.' };
+    }
+
+    const targetAdmin = admins.find((a) => a.id === userId);
+    if (targetAdmin) {
+      const updatedAdmins = admins.map((a) =>
+        a.id === userId
+          ? { ...a, name: trimmedName, phone: data.phone !== undefined ? data.phone.trim() : a.phone }
+          : a
+      );
+      setAdmins(updatedAdmins);
+      localStorage.setItem('synapse_hpg_admins', JSON.stringify(updatedAdmins));
+      if (currentUser?.id === userId) {
+        setCurrentUser({
+          ...targetAdmin,
+          name: trimmedName,
+          phone: data.phone !== undefined ? data.phone.trim() : targetAdmin.phone,
+        });
+      }
+      return { success: true };
+    }
+
+    const targetTeacher = teachers.find((t) => t.id === userId);
+    if (targetTeacher) {
+      const updatedTeachers = teachers.map((t) =>
+        t.id === userId
+          ? { ...t, name: trimmedName, phone: data.phone !== undefined ? data.phone.trim() : t.phone }
+          : t
+      );
+      setTeachers(updatedTeachers);
+      localStorage.setItem('synapse_hpg_teachers', JSON.stringify(updatedTeachers));
+      if (currentUser?.id === userId) {
+        setCurrentUser({
+          ...targetTeacher,
+          name: trimmedName,
+          phone: data.phone !== undefined ? data.phone.trim() : targetTeacher.phone,
+        });
+      }
+      return { success: true };
+    }
+
+    return { success: false, error: 'Utilisateur introuvable.' };
+  };
+
   const isAdmin = currentUser?.role === 'admin';
   const isTeacher = currentUser?.role === 'teacher';
 
@@ -523,6 +621,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         isAdmin,
         isTeacher,
         teachers,
+        admins,
         allUsers,
         adminUser,
         accountRequests,
@@ -538,6 +637,9 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         switchUser,
         initAdminAccount,
         changePassword,
+        promoteToAdmin,
+        revokeAdmin,
+        updateProfile,
         isCustomAdmin,
       }}
     >

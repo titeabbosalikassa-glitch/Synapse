@@ -54,7 +54,7 @@ export const ResourceList: React.FC<ResourceListProps> = ({
               </h1>
             </div>
             <p className="text-xs text-slate-500">
-              Espace documentaire HPG : téléversement de cours, synthèses et fiches d'exercices.
+              Espace documentaire : téléversement de cours, synthèses et fiches d'exercices.
             </p>
           </div>
 

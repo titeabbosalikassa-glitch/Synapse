@@ -14,6 +14,7 @@ import { TeacherSelector } from './components/admin/TeacherSelector';
 import { AddTeacherModal } from './components/admin/AddTeacherModal';
 import { AiExerciseStudio } from './components/admin/AiExerciseStudio';
 import { ActivityLogTable } from './components/admin/ActivityLogTable';
+import { AnalyticsView } from './components/admin/AnalyticsView';
 import { AccountProfilePage } from './components/admin/AccountProfilePage';
 import { ConfirmDialog } from './components/common/ConfirmDialog';
 import { LoginScreen } from './components/auth/LoginScreen';
@@ -173,6 +174,40 @@ function AppContent() {
     confirmLabel: 'Confirmer',
     action: () => {},
   });
+
+  // Global keyboard shortcuts for power users
+  useEffect(() => {
+    const handleKeyDown = (e: KeyboardEvent) => {
+      // Do not trigger shortcuts if user is typing inside an input/textarea/select
+      const target = e.target as HTMLElement;
+      if (['INPUT', 'TEXTAREA', 'SELECT'].includes(target.tagName)) {
+        // Allow Escape even in inputs to blur or close
+        if (e.key === 'Escape') {
+          target.blur();
+        }
+        return;
+      }
+
+      if ((e.ctrlKey || e.metaKey) && e.key.toLowerCase() === 'n') {
+        e.preventDefault();
+        setEditingStudent(null);
+        setIsStudentModalOpen(true);
+      } else if ((e.ctrlKey || e.metaKey) && e.shiftKey && e.key.toLowerCase() === 's') {
+        e.preventDefault();
+        setEditingSession(null);
+        setIsSessionModalOpen(true);
+      } else if (e.key === 'Escape') {
+        if (isStudentModalOpen) setIsStudentModalOpen(false);
+        else if (isSessionModalOpen) setIsSessionModalOpen(false);
+        else if (isObjectiveModalOpen) setIsObjectiveModalOpen(false);
+        else if (isPdfModalOpen) setIsPdfModalOpen(false);
+        else if (isAddTeacherModalOpen) setIsAddTeacherModalOpen(false);
+        else if (selectedStudent) setSelectedStudent(null);
+      }
+    };
+    window.addEventListener('keydown', handleKeyDown);
+    return () => window.removeEventListener('keydown', handleKeyDown);
+  }, [isStudentModalOpen, isSessionModalOpen, isObjectiveModalOpen, isPdfModalOpen, isAddTeacherModalOpen, selectedStudent]);
 
   // Strict Password Authentication: Show Login Screen if not authenticated
   if (!currentUser) {
@@ -637,6 +672,12 @@ function AppContent() {
             students={students}
             sessions={sessions}
           />
+        ) : activeTab === 'analytics' && isAdmin ? (
+          <AnalyticsView
+            sessions={sessions}
+            teachers={teachers}
+            students={students}
+          />
         ) : activeTab === 'activities' && isAdmin ? (
           <ActivityLogTable
             sessions={sessions}
@@ -649,8 +690,27 @@ function AppContent() {
             teachers={teachers}
             students={students}
             notionStatuses={notionStatuses}
+            sessions={sessions}
             savedEvaluations={evaluations}
             onSaveEvaluation={(ev) => setEvaluations([ev, ...evaluations])}
+            onClearEvaluations={() => {
+              setConfirmDialog({
+                isOpen: true,
+                title: 'Vider tout l\'historique des exercices IA ?',
+                message: 'Cette action supprimera définitivement toutes les évaluations et devoirs générés et enregistrés.',
+                confirmLabel: 'Tout supprimer',
+                action: () => setEvaluations([]),
+              });
+            }}
+            onDeleteEvaluation={(id) => {
+              setConfirmDialog({
+                isOpen: true,
+                title: 'Supprimer cette évaluation ?',
+                message: 'Voulez-vous supprimer définitivement ce devoir de l\'historique ?',
+                confirmLabel: 'Supprimer',
+                action: () => setEvaluations((prev) => prev.filter((e) => e.id !== id)),
+              });
+            }}
           />
         ) : (
           <div className="bg-white rounded-2xl border border-slate-200/80 p-8 text-center text-slate-500 shadow-xs">

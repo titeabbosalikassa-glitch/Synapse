@@ -72,7 +72,7 @@ export const AddTeacherModal: React.FC<AddTeacherModalProps> = ({
             </div>
             <div>
               <h2 className="text-lg font-bold text-slate-900">
-                Ajouter un Enseignant HPG
+                Ajouter un Enseignant
               </h2>
               <p className="text-xs text-slate-500">
                 Création d'un nouveau compte enseignant avec mot de passe
@@ -168,7 +168,7 @@ export const AddTeacherModal: React.FC<AddTeacherModalProps> = ({
                 required
                 value={email}
                 onChange={(e) => setEmail(e.target.value)}
-                placeholder="nom.prenom@hpg-education.com"
+                placeholder="nom.prenom@synapse-coach.com"
                 className="w-full pl-10 pr-3.5 py-2.5 bg-slate-50 border border-slate-200 rounded-xl text-xs focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-600 focus:bg-white transition-all text-slate-900"
               />
             </div>

@@ -15,6 +15,7 @@ import {
   Search,
   Key,
   ShieldAlert,
+  ShieldCheck,
   Check,
   X,
   Clock,
@@ -40,7 +41,8 @@ export const TeacherSelector: React.FC<TeacherSelectorProps> = ({
   students,
   sessions = [],
 }) => {
-  const { accountRequests, approveAccountRequest, rejectAccountRequest } = useAuth();
+  const { currentUser, accountRequests, approveAccountRequest, rejectAccountRequest, admins, promoteToAdmin, revokeAdmin, switchUser } = useAuth();
+  const isPrimaryAdmin = currentUser?.id === 'admin-1';
   const [searchTerm, setSearchTerm] = useState('');
   const [visiblePasswords, setVisiblePasswords] = useState<Record<string, boolean>>({});
   const [editingPasswordUser, setEditingPasswordUser] = useState<User | null>(null);
@@ -92,7 +94,7 @@ export const TeacherSelector: React.FC<TeacherSelectorProps> = ({
             <div>
               <div className="flex items-center gap-2">
                 <h1 className="text-xl font-extrabold text-slate-900 tracking-tight">
-                  Gestion du Corps Professoral HPG
+                  Gestion du Corps Professoral
                 </h1>
                 <span className="text-xs px-2 py-0.5 rounded-full font-bold bg-indigo-50 text-indigo-700 border border-indigo-200/60">
                   {teachers.length} actif{teachers.length > 1 ? 's' : ''}
@@ -110,7 +112,7 @@ export const TeacherSelector: React.FC<TeacherSelectorProps> = ({
           </div>
 
           <div className="flex items-center gap-2">
-            {onAddTeacher && (
+            {isPrimaryAdmin && onAddTeacher && (
               <button
                 id="add-teacher-btn"
                 onClick={onAddTeacher}
@@ -154,7 +156,7 @@ export const TeacherSelector: React.FC<TeacherSelectorProps> = ({
       </div>
 
       {/* Pending Account Requests Section */}
-      {pendingRequests.length > 0 && (
+      {isPrimaryAdmin && pendingRequests.length > 0 && (
         <div className="bg-slate-50 rounded-3xl border border-slate-200 p-6 shadow-xs space-y-4">
           <div className="flex items-center justify-between">
             <div className="flex items-center gap-2.5">
@@ -231,6 +233,51 @@ export const TeacherSelector: React.FC<TeacherSelectorProps> = ({
                     <span>Refuser</span>
                   </button>
                 </div>
+              </div>
+            ))}
+          </div>
+        </div>
+      )}
+
+      {/* Secondary Administrators Section */}
+      {admins.filter(a => a.id !== 'admin-1').length > 0 && (
+        <div className="bg-indigo-50/50 rounded-3xl border border-indigo-200/60 p-6 shadow-xs space-y-4">
+          <div className="flex items-center gap-2.5">
+            <div className="w-9 h-9 rounded-xl bg-indigo-600 text-white flex items-center justify-center font-bold text-xs shadow-xs">
+              <ShieldCheck className="w-5 h-5 text-white" />
+            </div>
+            <div>
+              <h2 className="text-sm font-bold text-slate-900">
+                Administrateurs désignés ({admins.filter(a => a.id !== 'admin-1').length})
+              </h2>
+              <p className="text-xs text-slate-600">
+                Vous avez désigné d'autres administrateurs. Vous pouvez leur retirer les droits d'administration à tout moment.
+              </p>
+            </div>
+          </div>
+
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            {admins.filter(a => a.id !== 'admin-1').map((admin) => (
+              <div key={admin.id} className="bg-white rounded-2xl border border-indigo-100 p-4 flex items-center justify-between shadow-2xs">
+                <div>
+                  <h3 className="text-xs font-bold text-slate-900">{admin.name}</h3>
+                  <p className="text-[11px] text-slate-500">{admin.email}</p>
+                </div>
+                {isPrimaryAdmin && (
+                  <button
+                    type="button"
+                    onClick={() => {
+                      const success = revokeAdmin(admin.id);
+                      if (success) {
+                        setActionFeedback(`Les droits d'administrateur de ${admin.name} ont été retirés.`);
+                        setTimeout(() => setActionFeedback(null), 4000);
+                      }
+                    }}
+                    className="py-1.5 px-3 bg-rose-50 hover:bg-rose-100 text-rose-700 border border-rose-200 rounded-xl text-xs font-bold transition-colors"
+                  >
+                    Retirer les droits
+                  </button>
+                )}
               </div>
             ))}
           </div>
@@ -342,7 +389,10 @@ export const TeacherSelector: React.FC<TeacherSelectorProps> = ({
                 {/* Actions: Inspect or Delete */}
                 <div className="pt-2 border-t border-slate-100 flex items-center gap-2">
                   <button
-                    onClick={() => onSelectTeacher(teacher)}
+                    onClick={() => {
+                      onSelectTeacher(teacher);
+                      switchUser(teacher.id);
+                    }}
                     className={`flex-1 py-2 px-3 rounded-xl text-xs font-semibold flex items-center justify-center gap-1.5 transition-colors ${
                       isSelected
                         ? 'bg-indigo-600 text-white shadow-xs'
@@ -353,15 +403,34 @@ export const TeacherSelector: React.FC<TeacherSelectorProps> = ({
                     <ArrowRight className="w-3.5 h-3.5" />
                   </button>
 
-                  <button
-                    id={`delete-teacher-${teacher.id}`}
-                    onClick={() => onDeleteTeacher(teacher)}
-                    title={`Supprimer le compte de ${teacher.name}`}
-                    className="p-2 rounded-xl border border-slate-200 hover:border-rose-200 hover:bg-rose-50 text-slate-400 hover:text-rose-600 transition-colors"
-                    aria-label={`Supprimer l'enseignant ${teacher.name}`}
-                  >
-                    <Trash2 className="w-4 h-4" />
-                  </button>
+                  {isPrimaryAdmin && (
+                    <button
+                      onClick={() => {
+                        const success = promoteToAdmin(teacher.id);
+                        if (success) {
+                          setActionFeedback(`${teacher.name} a été désigné Administrateur avec succès.`);
+                          setTimeout(() => setActionFeedback(null), 4000);
+                        }
+                      }}
+                      title="Désigner comme Administrateur"
+                      className="p-2 rounded-xl border border-slate-200 hover:border-emerald-200 hover:bg-emerald-50 text-slate-400 hover:text-emerald-600 transition-colors"
+                      aria-label={`Promouvoir ${teacher.name} admin`}
+                    >
+                      <ShieldCheck className="w-4 h-4" />
+                    </button>
+                  )}
+
+                  {isPrimaryAdmin && (
+                    <button
+                      id={`delete-teacher-${teacher.id}`}
+                      onClick={() => onDeleteTeacher(teacher)}
+                      title={`Supprimer le compte de ${teacher.name}`}
+                      className="p-2 rounded-xl border border-slate-200 hover:border-rose-200 hover:bg-rose-50 text-slate-400 hover:text-rose-600 transition-colors"
+                      aria-label={`Supprimer l'enseignant ${teacher.name}`}
+                    >
+                      <Trash2 className="w-4 h-4" />
+                    </button>
+                  )}
                 </div>
               </div>
             );

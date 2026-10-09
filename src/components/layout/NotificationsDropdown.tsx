@@ -110,10 +110,11 @@ export const NotificationsDropdown: React.FC<NotificationsDropdownProps> = ({
                 {notifications.length > 0 && (
                   <button
                     onClick={onClearAll}
-                    title="Effacer tout l'historique"
-                    className="p-1.5 text-slate-400 hover:text-rose-600 hover:bg-rose-50 rounded-lg transition-colors"
+                    title="Vider toutes les notifications"
+                    className="px-2 py-1.5 text-slate-500 hover:text-rose-600 hover:bg-rose-50 rounded-lg text-xs font-semibold flex items-center gap-1 transition-colors"
                   >
-                    <Trash2 className="w-3.5 h-3.5" />
+                    <Trash2 className="w-3.5 h-3.5 text-rose-500" />
+                    <span className="text-[10px]">Vider</span>
                   </button>
                 )}
               </div>
@@ -311,9 +312,17 @@ export const NotificationsDropdown: React.FC<NotificationsDropdownProps> = ({
             </div>
 
             {/* Footer */}
-            <div className="pt-2 px-4 border-t border-slate-100 flex items-center justify-between text-[10px] text-slate-400">
-              <span>HPG • Direction Pédagogique</span>
-              <span className="text-indigo-600 font-bold">Sécurisé</span>
+            <div className="pt-2.5 px-4 border-t border-slate-100 flex items-center justify-between text-[11px] text-slate-500">
+              <span className="text-[10px] text-slate-400">Direction Pédagogique</span>
+              {notifications.length > 0 && (
+                <button
+                  onClick={onClearAll}
+                  className="text-xs font-bold text-rose-600 hover:text-rose-800 hover:bg-rose-50 px-2 py-1 rounded-lg transition-colors flex items-center gap-1"
+                >
+                  <Trash2 className="w-3.5 h-3.5" />
+                  <span>Vider tout</span>
+                </button>
+              )}
             </div>
           </div>
         </>

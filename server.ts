@@ -38,17 +38,17 @@ app.get('/api/health', (req, res) => {
 
 // Endpoint: AI-Generated Evaluation for Administrator
 app.post('/api/generate-evaluation', async (req, res) => {
-  try {
-    const {
-      studentName,
-      classLevel,
-      stream,
-      subject,
-      notionsToEvaluate,
-      difficulty = 'standard',
-    } = req.body;
+  const {
+    studentName,
+    classLevel = 'Terminale',
+    stream = 'Général',
+    subject = 'Mathématiques',
+    notionsToEvaluate = ['Notions fondamentales'],
+    difficulty = 'standard',
+  } = req.body || {};
 
-    if (!classLevel || !subject || !Array.isArray(notionsToEvaluate) || notionsToEvaluate.length === 0) {
+  try {
+    if (!req.body?.classLevel || !req.body?.subject || !Array.isArray(req.body?.notionsToEvaluate) || req.body?.notionsToEvaluate.length === 0) {
       return res.status(400).json({
         error: 'Champs requis manquants : classe, matière et au moins une notion.',
       });
@@ -59,23 +59,24 @@ app.post('/api/generate-evaluation', async (req, res) => {
     // If Gemini API Key is present, generate real bespoke assessment
     if (genAI) {
       const prompt = `Tu es un inspecteur pédagogique et professeur expert pour HPG (Haute Pédagogie Générale).
-Génère une évaluation sommative personnalisée et rigoureuse selon les critères suivants :
+Génère une évaluation sommative personnalisée et rigoureuse STRICTEMENT basée sur le programme officiel de mathématiques 2026-2027 pour le niveau et la filière demandés :
 - Élève ciblé : ${studentName || 'Élève HPG'}
 - Niveau scolaire : ${classLevel} (Filière : ${stream || 'Général'})
 - Matière : ${subject}
-- Notions à évaluer spécifiquement : ${notionsToEvaluate.join(', ')}
+- Notions officielles du programme à évaluer spécifiquement : ${notionsToEvaluate.join(', ')}
 - Niveau d'exigence : ${difficulty}
 
 Consignes impératives :
-1. Le total des points de l'ensemble des exercices DOIT être EXACTEMENT de 20 points.
-2. Crée entre 2 et 4 exercices progressifs (exercice 1 : application directe/définitions, exercices 2-3 : approfondissement et problèmes de synthèse).
-3. Pour les matières scientifiques (Mathématiques, Physique, Chimie, Informatique, SVT), utilise la syntaxe LaTeX pour toutes les formules mathématiques et scientifiques, encadrées par des dollars simples pour le texte en ligne ($...$) et des doubles dollars pour les formules isolées ($$...$$).
-4. Chaque exercice doit comporter :
-   - 'title' : Titre de l'exercice (ex: 'Exercice 1 : Étude de fonction polynomiale')
+1. Le contenu des exercices doit être en parfaite adéquation avec la progression officielle 2026-2027 de mathématiques pour le niveau ${classLevel}.
+2. Le total des points de l'ensemble des exercices DOIT être EXACTEMENT de 20 points.
+3. Crée entre 2 et 4 exercices progressifs (exercice 1 : application directe/définitions du cours, exercices 2-3 : exercices d'entraînement, approfondissement et problème de synthèse selon les normes officielles des devoirs surveillés DS/DM).
+4. Pour les matières scientifiques (Mathématiques, Physique, Chimie, Informatique, SVT), utilise la syntaxe LaTeX pour toutes les formules mathématiques et scientifiques, encadrées par des dollars simples pour le texte en ligne ($...$) et des doubles dollars pour les formules isolées ($$...$$).
+5. Chaque exercice doit comporter :
+   - 'title' : Titre de l'exercice (ex: 'Exercice 1 : Évaluation des acquis — ${notionsToEvaluate[0] || 'Notion'}')
    - 'points' : Le barème entier ou demi-entier (ex: 6)
    - 'statement' : L'énoncé complet avec les sous-questions numérotées a), b), c) et la répartition des points par question.
    - 'solution' : Le corrigé détaillé pas-à-pas avec le barème indicatif.
-5. Donne également des consignes claires en introduction dans 'instructions' (temps estimé, calculatrice autorisée ou non, rigueur de rédaction).
+6. Donne également des consignes claires en introduction dans 'instructions' (temps estimé, calculatrice recommandée/autorisée, rigueur de rédaction, référence au programme officiel 2026-2027).
 
 Réponds UNIQUEMENT au format JSON strict avec la structure suivante :
 {
@@ -127,11 +128,9 @@ Réponds UNIQUEMENT au format JSON strict avec la structure suivante :
 
     return res.json(fallbackEvaluation);
   } catch (error: any) {
-    console.error('Error generating evaluation:', error);
-    res.status(500).json({
-      error: 'Erreur lors de la génération du devoir.',
-      details: error?.message || 'Erreur inconnue',
-    });
+    console.warn('Gemini API quota/error encountered, falling back to expert pedagogical generator:', error?.message);
+    const fallbackEvaluation = generatePedagogicalFallback(classLevel, stream, subject, notionsToEvaluate);
+    return res.json(fallbackEvaluation);
   }
 });
 

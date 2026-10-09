@@ -11,6 +11,7 @@ import {
   LogOut,
   X,
   Activity,
+  BarChart3,
 } from 'lucide-react';
 import { Logo } from '../common/Logo';
 
@@ -43,8 +44,9 @@ export const Sidebar: React.FC<SidebarProps> = ({
     { id: 'teachers', label: 'Gestion Enseignants', icon: Users },
     { id: 'students', label: 'Tous les Élèves', icon: BookOpen },
     { id: 'sessions', label: 'Toutes les Séances', icon: Calendar },
+    { id: 'analytics', label: 'Analyses', icon: BarChart3 },
     { id: 'activities', label: 'Journal Activités', icon: Activity },
-    { id: 'resources', label: 'Ressources HPG', icon: FileText },
+    { id: 'resources', label: 'Ressources', icon: FileText },
     {
       id: 'ai-exercises',
       label: 'Évaluations IA /20',
@@ -75,18 +77,18 @@ export const Sidebar: React.FC<SidebarProps> = ({
       <aside
         className={`shrink-0 transition-transform duration-200 ${
           isOpenMobile
-            ? 'fixed inset-y-0 left-0 w-72 max-w-[85vw] bg-white p-5 shadow-2xl flex flex-col justify-between overflow-y-auto z-50'
+            ? 'fixed inset-y-0 left-0 w-72 max-w-[85vw] bg-white dark:bg-slate-900 p-5 shadow-2xl flex flex-col justify-between overflow-y-auto z-50 border-r border-slate-200 dark:border-slate-800'
             : 'hidden lg:flex lg:flex-col lg:justify-between lg:w-64'
         }`}
       >
         <div className="space-y-5">
           {/* Mobile drawer header with Logo and Close button */}
-          <div className="flex items-center justify-between pb-3.5 border-b border-slate-100 lg:hidden">
+          <div className="flex items-center justify-between pb-3.5 border-b border-slate-100 dark:border-slate-800 lg:hidden">
             <Logo size="sm" showText={true} />
             <button
               type="button"
               onClick={onCloseMobile}
-              className="p-2 rounded-xl text-slate-500 hover:text-slate-900 hover:bg-slate-100 transition-colors"
+              className="p-2 rounded-xl text-slate-500 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors"
               aria-label="Fermer la navigation"
               title="Fermer"
             >
@@ -95,44 +97,44 @@ export const Sidebar: React.FC<SidebarProps> = ({
           </div>
 
           {/* User profile card */}
-          <div className="p-4 rounded-2xl bg-white border border-slate-200/80 shadow-2xs">
+          <div className="p-4 rounded-2xl bg-white dark:bg-slate-900 border border-slate-200/80 dark:border-slate-800 shadow-2xs">
             <div className="flex items-center gap-3">
               <div
                 className={`w-10 h-10 rounded-xl flex items-center justify-center font-bold text-sm ${
                   isAdmin
-                    ? 'bg-slate-800 text-white'
-                    : 'bg-indigo-100 text-indigo-700'
+                    ? 'bg-slate-800 dark:bg-slate-700 text-white'
+                    : 'bg-indigo-100 dark:bg-indigo-900/50 text-indigo-700 dark:text-indigo-300'
                 }`}
               >
                 {isAdmin ? <Shield className="w-5 h-5" /> : currentUser.name.charAt(0)}
               </div>
               <div className="min-w-0 flex-1">
-                <div className="text-xs font-bold text-slate-900 truncate">
+                <div className="text-xs font-bold text-slate-900 dark:text-slate-100 truncate">
                   {currentUser.name}
                 </div>
-                <div className="text-[11px] text-slate-500 truncate">
-                  {isAdmin ? 'Direction HPG' : `Professeur : ${currentUser.subject}`}
+                <div className="text-[11px] text-slate-500 dark:text-slate-400 truncate">
+                  {isAdmin ? 'Direction' : `Professeur : ${currentUser.subject}`}
                 </div>
               </div>
             </div>
 
-            <div className="mt-3 pt-3 border-t border-slate-100 flex items-center justify-between text-[11px]">
-              <span className="text-slate-400">Périmètre :</span>
+            <div className="mt-3 pt-3 border-t border-slate-100 dark:border-slate-800 flex items-center justify-between text-[11px]">
+              <span className="text-slate-400 dark:text-slate-500">Périmètre :</span>
               <span
                 className={`font-semibold px-2 py-0.5 rounded-md ${
                   isAdmin
-                    ? 'bg-slate-100 text-slate-700 border border-slate-200'
-                    : 'bg-emerald-50 text-emerald-700'
+                    ? 'bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-300 border border-slate-200 dark:border-slate-700'
+                    : 'bg-emerald-50 dark:bg-emerald-950/50 text-emerald-700 dark:text-emerald-300'
                 }`}
               >
-                {isAdmin ? 'HPG Global' : 'Données Isolées'}
+                {isAdmin ? 'Global' : 'Données Isolées'}
               </span>
             </div>
           </div>
 
           {/* Nav List */}
           <nav className="space-y-1">
-            <div className="px-3 pb-2 text-[10px] font-bold uppercase tracking-wider text-slate-400">
+            <div className="px-3 pb-2 text-[10px] font-bold uppercase tracking-wider text-slate-400 dark:text-slate-500">
               {isAdmin ? 'Supervision Globale' : 'Espace Pédagogique'}
             </div>
 
@@ -149,10 +151,10 @@ export const Sidebar: React.FC<SidebarProps> = ({
                     isActive
                       ? isHighlight
                         ? 'bg-gradient-to-r from-indigo-600 to-violet-600 text-white shadow-xs'
-                        : 'bg-indigo-50 text-indigo-700 font-bold'
+                        : 'bg-indigo-50 dark:bg-indigo-950/60 text-indigo-700 dark:text-indigo-300 font-bold'
                       : isHighlight
-                      ? 'text-indigo-600 hover:bg-indigo-50/70 border border-indigo-200/60 bg-indigo-50/30'
-                      : 'text-slate-600 hover:bg-slate-100/80 hover:text-slate-900'
+                      ? 'text-indigo-600 dark:text-indigo-400 hover:bg-indigo-50/70 dark:hover:bg-indigo-950/30 border border-indigo-200/60 dark:border-indigo-800/60 bg-indigo-50/30 dark:bg-indigo-950/20'
+                      : 'text-slate-600 dark:text-slate-300 hover:bg-slate-100/80 dark:hover:bg-slate-800 hover:text-slate-900 dark:hover:text-white'
                   }`}
                 >
                   <Icon
@@ -211,7 +213,7 @@ export const Sidebar: React.FC<SidebarProps> = ({
             <span>Déconnexion</span>
           </button>
           <div className="text-[11px] text-slate-400 text-center">
-            HPG Pédagogie • MVP
+            Synapse Coach • Pédagogie
           </div>
         </div>
       </aside>

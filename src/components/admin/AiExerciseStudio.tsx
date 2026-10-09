@@ -3,6 +3,7 @@ import {
   Student,
   User,
   NotionStatus,
+  Session,
   Evaluation,
   EvaluationExercise,
   SubjectName,
@@ -33,16 +34,22 @@ interface AiExerciseStudioProps {
   teachers: User[];
   students: Student[];
   notionStatuses: NotionStatus[];
+  sessions: Session[];
   savedEvaluations: Evaluation[];
   onSaveEvaluation: (evaluation: Evaluation) => void;
+  onClearEvaluations?: () => void;
+  onDeleteEvaluation?: (id: string) => void;
 }
 
 export const AiExerciseStudio: React.FC<AiExerciseStudioProps> = ({
   teachers,
   students,
   notionStatuses,
+  sessions,
   savedEvaluations,
   onSaveEvaluation,
+  onClearEvaluations,
+  onDeleteEvaluation,
 }) => {
   // Step 1: Configuration state
   const [selectedStudentId, setSelectedStudentId] = useState<string>(students[0]?.id || '');
@@ -115,7 +122,7 @@ export const AiExerciseStudio: React.FC<AiExerciseStudioProps> = ({
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
-          studentName: activeStudent ? `${activeStudent.firstName} ${activeStudent.lastName}` : 'Élève HPG',
+          studentName: activeStudent ? `${activeStudent.firstName} ${activeStudent.lastName}` : 'Élève',
           classLevel,
           stream,
           subject: selectedSubject,
@@ -134,7 +141,7 @@ export const AiExerciseStudio: React.FC<AiExerciseStudioProps> = ({
       const newEval: Evaluation = {
         id: `eval-${Date.now()}`,
         studentId: selectedStudentId,
-        studentName: activeStudent ? `${activeStudent.firstName} ${activeStudent.lastName}` : 'Élève HPG',
+        studentName: activeStudent ? `${activeStudent.firstName} ${activeStudent.lastName}` : 'Élève',
         teacherId: activeStudent?.teacherId || 't-1',
         classLevel,
         stream,
@@ -169,7 +176,7 @@ export const AiExerciseStudio: React.FC<AiExerciseStudioProps> = ({
   const handleSaveToHistory = () => {
     if (!generatedEvaluation) return;
     onSaveEvaluation(generatedEvaluation);
-    alert('Le devoir a été enregistré dans l\'historique des évaluations HPG.');
+    alert('Le devoir a été enregistré dans l\'historique des évaluations.');
   };
 
   // Copy full test to clipboard
@@ -204,7 +211,7 @@ export const AiExerciseStudio: React.FC<AiExerciseStudioProps> = ({
               </h1>
             </div>
             <p className="text-xs text-indigo-200 max-w-2xl">
-              Module réservé à la Direction HPG. Génération de devoirs sommatifs sur 20 points basés
+              Module réservé à la Direction. Génération de devoirs sommatifs sur 20 points basés
               strictement sur les notions étudiées et assimilées, avec rendu typographique LaTeX des
               formules mathématiques et scientifiques.
             </p>
@@ -247,7 +254,7 @@ export const AiExerciseStudio: React.FC<AiExerciseStudioProps> = ({
               {/* Filtre par enseignant */}
               <div>
                 <label className="block text-[11px] font-semibold text-slate-700 mb-1">
-                  Filtrer par Enseignant HPG
+                  Filtrer par Enseignant
                 </label>
                 <select
                   value={selectedTeacherId}
@@ -322,21 +329,17 @@ export const AiExerciseStudio: React.FC<AiExerciseStudioProps> = ({
                 </div>
               </div>
 
-              <div className="grid grid-cols-2 gap-3">
-                <div>
-                  <label className="block text-[11px] font-semibold text-slate-700 mb-1">
-                    Filière
-                  </label>
-                  <input
-                    type="text"
-                    value={stream}
-                    onChange={(e) => setStream(e.target.value as Stream)}
-                    className="w-full px-3 py-2 text-xs rounded-xl border border-slate-200 bg-slate-50"
-                  />
+              <div className="space-y-3 pt-1">
+                <div className="p-2.5 rounded-xl bg-indigo-50/70 border border-indigo-100 flex items-center justify-between text-xs">
+                  <span className="text-slate-600 font-medium">Série / Filière active :</span>
+                  <span className="font-bold text-indigo-700 px-2.5 py-0.5 rounded-lg bg-white border border-indigo-200">
+                    {stream}
+                  </span>
                 </div>
+
                 <div>
                   <label className="block text-[11px] font-semibold text-slate-700 mb-1">
-                    Exigence
+                    Exigence de l'Évaluation
                   </label>
                   <select
                     value={difficulty}
@@ -350,11 +353,11 @@ export const AiExerciseStudio: React.FC<AiExerciseStudioProps> = ({
                 </div>
               </div>
 
-              {/* 2. Sélection des notions étudiées / assimilées */}
+              {/* 2. Enseignements & Cours vus par l'élève (Saisis par l'enseignant) */}
               <div className="pt-3 border-t border-slate-100 space-y-2">
                 <div className="flex items-center justify-between">
                   <h3 className="text-xs font-bold uppercase tracking-wider text-slate-400">
-                    2. Notions de l'Élève à Évaluer
+                    2. Enseignements & Cours vus par l'élève
                   </h3>
                   <span className="text-[11px] font-mono font-bold text-indigo-700">
                     {selectedNotions.length} sélectionnée(s)
@@ -362,82 +365,68 @@ export const AiExerciseStudio: React.FC<AiExerciseStudioProps> = ({
                 </div>
 
                 <p className="text-[11px] text-slate-500">
-                  Cochez les notions que l'élève a déjà travaillées ou assimilées avec son enseignant :
+                  Voici tous les cours et notions insérés par l'enseignant après chaque séance avec cet élève. Cliquez sur les notions sur lesquelles vous souhaitez le faire composer :
                 </p>
 
                 <div className="max-h-60 overflow-y-auto space-y-1.5 pr-1">
-                  {studentNotions.length === 0 ? (
+                  {sessions.filter((s) => s.studentId === selectedStudentId).length === 0 ? (
                     <div className="p-4 bg-slate-50 rounded-xl text-center text-slate-400 text-xs">
-                      Aucune notion encore enregistrée pour cet élève.
-                      <div className="mt-1 text-slate-500 font-medium">
-                        Vous pouvez tout de même tester en saisissant une notion personnalisée.
-                      </div>
+                      Aucune séance enregistrée par l'enseignant pour cet élève. L'enseignant doit d'abord insérer le compte rendu de son cours.
                     </div>
                   ) : (
-                    studentNotions.map((n) => {
-                      const isChecked = selectedNotions.includes(n.notion);
-                      const isAssimilated = n.status === 'assimilated';
-                      const isToReinforce = n.status === 'to_reinforce';
-
-                      return (
-                        <div
-                          key={n.id}
-                          onClick={() => handleToggleNotion(n.notion)}
-                          className={`p-2.5 rounded-xl border cursor-pointer transition-all flex items-center justify-between text-xs ${
-                            isChecked
-                              ? 'bg-indigo-50 border-indigo-300 text-indigo-950 font-semibold'
-                              : 'bg-slate-50/70 border-slate-200/80 text-slate-700 hover:bg-slate-100'
-                          }`}
-                        >
-                          <div className="flex items-center gap-2">
-                            <input
-                              type="checkbox"
-                              checked={isChecked}
-                              onChange={() => {}}
-                              className="rounded text-indigo-600 focus:ring-0"
-                            />
-                            <div>
-                              <span>{n.notion}</span>
-                              <span className="text-[10px] text-slate-400 block font-normal">
-                                Chapitre : {n.chapter}
-                              </span>
-                            </div>
-                          </div>
-
-                          <span
-                            className={`text-[10px] px-2 py-0.5 rounded font-bold ${
-                              isAssimilated
-                                ? 'bg-emerald-100 text-emerald-800'
-                                : isToReinforce
-                                ? 'bg-amber-100 text-amber-800'
-                                : 'bg-blue-100 text-blue-800'
+                    sessions
+                      .filter((s) => s.studentId === selectedStudentId)
+                      .map((sess) => {
+                        const isChecked = selectedNotions.includes(sess.notion);
+                        return (
+                          <div
+                            key={sess.id}
+                            onClick={() => handleToggleNotion(sess.notion)}
+                            className={`p-3 rounded-xl border cursor-pointer transition-all flex items-center justify-between text-xs ${
+                              isChecked
+                                ? 'bg-indigo-50 border-indigo-300 text-indigo-950 font-semibold'
+                                : 'bg-slate-50/70 border-slate-200/80 text-slate-700 hover:bg-slate-100'
                             }`}
                           >
-                            {isAssimilated ? 'Assimilée' : isToReinforce ? 'À renforcer' : 'Étudiée'}
-                          </span>
-                        </div>
-                      );
-                    })
+                            <div className="flex items-center gap-2.5">
+                              <input
+                                type="checkbox"
+                                checked={isChecked}
+                                onChange={() => {}}
+                                className="rounded text-indigo-600 focus:ring-0"
+                              />
+                              <div>
+                                <span className="font-bold text-slate-900">{sess.notion}</span>
+                                <span className="text-[10px] text-slate-500 block mt-0.5">
+                                  Chapitre : {sess.chapter} • <span className="font-mono text-slate-400">{sess.date}</span>
+                                  {sess.contentWorked && ` • ${sess.contentWorked}`}
+                                </span>
+                              </div>
+                            </div>
+                            <span className="text-[10px] px-2.5 py-1 rounded-full font-bold bg-indigo-100 text-indigo-800">
+                              Cours dispensé
+                            </span>
+                          </div>
+                        );
+                      })
                   )}
                 </div>
 
-                {/* Ajout manuel d'une notion si l'élève n'en a pas encore */}
-                {studentNotions.length === 0 && (
-                  <div className="pt-2">
-                    <button
-                      type="button"
-                      onClick={() => {
-                        const custom = prompt('Nom de la notion à évaluer :');
-                        if (custom && custom.trim()) {
-                          setSelectedNotions([...selectedNotions, custom.trim()]);
-                        }
-                      }}
-                      className="text-xs font-semibold text-indigo-600 hover:text-indigo-800 flex items-center gap-1"
-                    >
-                      <Plus className="w-3.5 h-3.5" /> + Ajouter une notion manuellement
-                    </button>
-                  </div>
-                )}
+                {/* Ajout manuel d'une notion si besoin */}
+                <div className="pt-2">
+                  <button
+                    type="button"
+                    onClick={() => {
+                      const custom = prompt('Nom de la notion à évaluer :');
+                      if (custom && custom.trim()) {
+                        setSelectedNotions([...selectedNotions, custom.trim()]);
+                      }
+                    }}
+                    className="text-xs font-semibold text-indigo-600 hover:text-indigo-800 flex items-center gap-1 cursor-pointer"
+                  >
+                    <Plus className="w-3.5 h-3.5" /> + Ajouter une notion complémentaire
+                  </button>
+                </div>
               </div>
 
               {apiError && (
@@ -644,8 +633,18 @@ export const AiExerciseStudio: React.FC<AiExerciseStudioProps> = ({
         <div className="space-y-4">
           <div className="flex items-center justify-between">
             <h2 className="text-base font-bold text-slate-900">
-              Historique des Devoirs et Évaluations HPG ({savedEvaluations.length})
+              Historique des Devoirs et Évaluations ({savedEvaluations.length})
             </h2>
+            {savedEvaluations.length > 0 && onClearEvaluations && (
+              <button
+                onClick={onClearEvaluations}
+                className="px-3 py-1.5 rounded-xl text-xs font-semibold text-rose-600 hover:bg-rose-50 border border-rose-200 transition-colors flex items-center gap-1.5"
+                title="Vider tout l'historique des exercices IA"
+              >
+                <Trash2 className="w-3.5 h-3.5" />
+                <span>Vider l'historique</span>
+              </button>
+            )}
           </div>
 
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
@@ -678,15 +677,26 @@ export const AiExerciseStudio: React.FC<AiExerciseStudioProps> = ({
 
                   <div className="pt-2 border-t border-slate-100 flex items-center justify-between text-[11px]">
                     <span className="text-slate-400">{ev.createdAt.split('T')[0]}</span>
-                    <button
-                      onClick={() => {
-                        setGeneratedEvaluation(ev);
-                        setActiveTab('generator');
-                      }}
-                      className="font-semibold text-indigo-600 hover:text-indigo-800"
-                    >
-                      Consulter le devoir
-                    </button>
+                    <div className="flex items-center gap-3">
+                      {onDeleteEvaluation && (
+                        <button
+                          onClick={() => onDeleteEvaluation(ev.id)}
+                          className="p-1 rounded-lg text-slate-400 hover:text-rose-600 hover:bg-rose-50 transition-colors"
+                          title="Supprimer cette évaluation"
+                        >
+                          <Trash2 className="w-3.5 h-3.5" />
+                        </button>
+                      )}
+                      <button
+                        onClick={() => {
+                          setGeneratedEvaluation(ev);
+                          setActiveTab('generator');
+                        }}
+                        className="font-semibold text-indigo-600 hover:text-indigo-800 text-xs"
+                      >
+                        Consulter le devoir
+                      </button>
+                    </div>
                   </div>
                 </div>
               ))

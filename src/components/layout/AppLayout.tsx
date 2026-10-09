@@ -2,6 +2,7 @@ import React, { useState } from 'react';
 import { Navbar } from './Navbar';
 import { Sidebar } from './Sidebar';
 import { AdminNotification } from '../../types';
+import { OfflineIndicator } from '../common/OfflineIndicator';
 
 interface AppLayoutProps {
   activeTab: string;
@@ -29,7 +30,7 @@ export const AppLayout: React.FC<AppLayoutProps> = ({
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
 
   return (
-    <div className="min-h-screen bg-slate-50 flex flex-col font-sans text-slate-900 antialiased">
+    <div className="min-h-screen bg-slate-50 dark:bg-slate-950 flex flex-col font-sans text-slate-900 dark:text-slate-100 antialiased">
       <Navbar
         onToggleMobileMenu={() => setIsMobileMenuOpen(!isMobileMenuOpen)}
         isMobileMenuOpen={isMobileMenuOpen}
@@ -39,6 +40,7 @@ export const AppLayout: React.FC<AppLayoutProps> = ({
         onDeleteNotification={onDeleteNotification}
         onClearAllNotifications={onClearAllNotifications}
         onOpenProfile={onOpenProfile}
+        onNavigateHome={() => onTabChange('dashboard')}
       />
 
       <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6 w-full flex-1">
@@ -58,6 +60,7 @@ export const AppLayout: React.FC<AppLayoutProps> = ({
           <div className="flex-1 min-w-0">{children}</div>
         </div>
       </main>
+      <OfflineIndicator />
     </div>
   );
 };

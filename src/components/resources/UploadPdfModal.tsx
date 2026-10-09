@@ -109,7 +109,7 @@ export const UploadPdfModal: React.FC<UploadPdfModalProps> = ({
                 Téléverser une ressource PDF
               </h2>
               <p className="text-[11px] text-slate-500">
-                Fiches d'exercices, cours et devoirs HPG
+                Fiches d'exercices, cours et devoirs
               </p>
             </div>
           </div>

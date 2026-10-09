@@ -25,6 +25,7 @@ import {
   Edit,
   Trash2,
   HelpCircle,
+  Printer,
 } from 'lucide-react';
 import {
   LineChart,
@@ -37,6 +38,7 @@ import {
   BarChart,
   Bar,
 } from 'recharts';
+import { StudentUnderstandingD3Chart } from './StudentUnderstandingD3Chart';
 
 interface StudentDetailProps {
   student: Student;
@@ -127,8 +129,23 @@ export const StudentDetail: React.FC<StudentDetailProps> = ({
 
   return (
     <div className="space-y-6 animate-in fade-in duration-200">
+      {/* En-tête pour impression (Conseil de classe) */}
+      <div className="print-header hidden print:block">
+        <div className="flex justify-between items-center border-b-2 border-slate-900 pb-3 mb-4">
+          <div>
+            <h1 className="text-xl font-black text-slate-900">Synapse Coach — Établissement d'Enseignement et de Suivi</h1>
+            <p className="text-sm font-bold text-indigo-700">Fiche de Synthèse Pédagogique — Conseil de Classe</p>
+          </div>
+          <div className="text-right text-xs text-slate-600">
+            <p className="font-semibold">{student.firstName} {student.lastName}</p>
+            <p>{student.classLevel} {student.stream !== 'Général' ? `• ${student.stream}` : ''}</p>
+            <p>Édition du {new Date().toLocaleDateString('fr-FR')}</p>
+          </div>
+        </div>
+      </div>
+
       {/* Navigation retour */}
-      <div className="flex items-center justify-between">
+      <div className="flex items-center justify-between print:hidden">
         <button
           onClick={onBack}
           className="inline-flex items-center gap-1.5 text-xs font-semibold text-slate-600 hover:text-slate-900 px-3 py-1.5 rounded-xl hover:bg-slate-100 transition-colors"
@@ -138,6 +155,13 @@ export const StudentDetail: React.FC<StudentDetailProps> = ({
         </button>
 
         <div className="flex items-center gap-2">
+          <button
+            onClick={() => window.print()}
+            className="inline-flex items-center gap-1.5 px-3 py-1.5 text-xs font-semibold text-indigo-700 bg-indigo-50 border border-indigo-200 rounded-xl hover:bg-indigo-100 transition-colors shadow-2xs"
+          >
+            <Printer className="w-3.5 h-3.5" />
+            <span>Imprimer la Fiche (Conseil)</span>
+          </button>
           <button
             onClick={() => onEditStudent(student)}
             className="inline-flex items-center gap-1.5 px-3 py-1.5 text-xs font-semibold text-slate-700 bg-white border border-slate-200 rounded-xl hover:bg-slate-50 transition-colors"
@@ -466,7 +490,7 @@ export const StudentDetail: React.FC<StudentDetailProps> = ({
 
                     <div className="flex items-center gap-3">
                       <div className="text-right">
-                        <span className="text-[10px] text-slate-400 block">Cotation HPG</span>
+                        <span className="text-[10px] text-slate-400 block">Cotation</span>
                         <span className="text-sm font-mono font-bold text-indigo-700">
                           {sess.rating.calculatedScore} / 100
                         </span>
@@ -680,6 +704,9 @@ export const StudentDetail: React.FC<StudentDetailProps> = ({
       {/* 5. ÉVOLUTION & STATISTIQUES GRAPHIQUES */}
       {activeSubTab === 'evolution' && (
         <div className="space-y-6">
+          {/* Graphique D3.js dynamique de progression de compréhension */}
+          <StudentUnderstandingD3Chart sessions={studentSessions} />
+
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
             {/* Graphique 1: Évolution des notes / scores */}
             <div className="bg-white rounded-2xl border border-slate-200/80 p-5 shadow-2xs space-y-4">
@@ -736,7 +763,7 @@ export const StudentDetail: React.FC<StudentDetailProps> = ({
                   <span>Synthèse de l'Assimilation des Notions</span>
                 </h3>
                 <p className="text-xs text-slate-500">
-                  État actuel de maîtrise des notions du programme officiel HPG.
+                  État actuel de maîtrise des notions du programme officiel.
                 </p>
               </div>
 

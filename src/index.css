@@ -1,1 +1,58 @@
 @import "tailwindcss";
+@custom-variant dark (&:where(.dark, .dark *));
+
+@media print {
+  /* Masquer la navigation, sidebar, boutons d'action et éléments superflus */
+  aside,
+  nav,
+  header,
+  button,
+  .print\:hidden {
+    display: none !important;
+  }
+
+  /* Ajuster le conteneur principal pour impression propre */
+  body {
+    background: white !important;
+    color: black !important;
+    font-size: 11pt;
+    line-height: 1.35;
+    margin: 0;
+    padding: 0;
+  }
+
+  /* Forcer un fond blanc et supprimer les ombres superflues */
+  .bg-white,
+  .rounded-2xl,
+  .rounded-xl,
+  .shadow-2xs,
+  .shadow-md {
+    box-shadow: none !important;
+    border: 1px solid #cbd5e1 !important;
+    background: white !important;
+  }
+
+  /* Afficher l'en-tête spécial Conseil de Classe */
+  .print-header {
+    display: block !important;
+    margin-bottom: 20px;
+    border-bottom: 2px solid #0f172a;
+    padding-bottom: 12px;
+  }
+
+  /* Forcer l'affichage de toutes les importantes sections pour impression */
+  .overflow-x-auto {
+    overflow: visible !important;
+  }
+
+  /* Sauts de page propres si nécessaire */
+  .page-break {
+    page-break-after: always;
+  }
+}
+
+.print-header {
+  display: none;
+}
+
+

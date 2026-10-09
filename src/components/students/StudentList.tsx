@@ -42,7 +42,7 @@ export const StudentList: React.FC<StudentListProps> = ({
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
         <div>
           <h1 className="text-2xl font-bold tracking-tight text-slate-900">
-            {isAdmin ? 'Tous les Élèves HPG' : 'Mes Élèves'}
+            {isAdmin ? 'Tous les Élèves' : 'Mes Élèves'}
           </h1>
           <p className="text-xs text-slate-500 mt-1">
             {filteredStudents.length} élève(s) répertorié(s)
